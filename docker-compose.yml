@@ -14,17 +14,17 @@ services:
     working_dir: /app
     command: sh -c "npm install && npm start"
     environment:
-      - NODE_ENV=production
-      - DB_HOST=zapexpress-db
-      - DB_USER=zapexpress
-      - DB_PASS=gbfernandesrj12
-      - DB_NAME=zapexpress
-      - JWT_SECRET=lzfZkjWROFujb1WnfGfkXIApghkSnHUyHXe1DeeW/yk=
-      - JWT_REFRESH_SECRET=mZxyJOkAsgOGN/WSxsLvgBGIKl8TRhWxmgCH/wVzc3I=
-      - BACKEND_URL=https://api.kgconnect.site
-      - FRONTEND_URL=https://app.kgconnect.site
-      - PROXY_PORT=3000
-      - CHROME_ARGS=--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu
+      NODE_ENV=production
+      BACKEND_URL=https://api.kgconnect.site
+      FRONTEND_URL=https://app.kgconnect.site
+      REACT_APP_BACKEND_URL=https://api.kgconnect.site
+      DB_HOST=postgres
+      DB_USER=zapexpress
+      DB_PASS=gbfernandesrj12
+      DB_NAME=zapexpress
+      JWT_SECRET=lzfZkjWROFujb1WnfGfkXIApghkSnHUyHXe1DeeW/yk=
+      JWT_REFRESH_SECRET=mZxyJOkAsgOGN/WSxsLvgBGIKl8TRhWxmgCH/wVzc3I=
+      CHROME_ARGS=--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu
     volumes:
       - ./backend:/app
       - zapexpress_public:/app/public
