@@ -1,0 +1,116 @@
+version: '3.8'
+
+networks:
+  traefik:
+    external: true
+  zapexpress:
+    driver: bridge
+
+services:
+  # Backend API
+  zapexpress-backend:
+    image: node:20-alpine
+    container_name: zapexpress-backend
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=zapexpress-db
+      - DB_USER=zapexpress
+      - DB_PASS=gbfernandesrj12
+      - DB_NAME=zapexpress
+      - JWT_SECRET=lzfZkjWROFujb1WnfGfkXIApghkSnHUyHXe1DeeW/yk=
+      - JWT_REFRESH_SECRET=mZxyJOkAsgOGN/WSxsLvgBGIKl8TRhWxmgCH/wVzc3I=
+      - BACKEND_URL=https://api.kgconnect.site
+      - FRONTEND_URL=https://app.kgconnect.site
+      - PROXY_PORT=3000
+      - CHROME_ARGS=--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu
+    volumes:
+      - ./backend:/app
+      - zapexpress_public:/app/public
+      - zapexpress_logs:/app/logs
+    networks:
+      - traefik
+      - zapexpress
+    depends_on:
+      - zapexpress-db
+      - zapexpress-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.zapexpress-backend.rule=Host(`api.kgconnect.site`)"
+      - "traefik.http.routers.zapexpress-backend.entrypoints=websecure"
+      - "traefik.http.routers.zapexpress-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.zapexpress-backend.loadbalancer.server.port=3000"
+    restart: unless-stopped
+
+  # Frontend
+  zapexpress-frontend:
+    image: node:20-alpine
+    container_name: zapexpress-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run build && npm install -g serve && serve -s build -l 3000"
+    environment:
+      - REACT_APP_BACKEND_URL=https://api.kgconnect.site
+    volumes:
+      - ./frontend:/app
+    networks:
+      - traefik
+    depends_on:
+      - zapexpress-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.zapexpress-frontend.rule=Host(`app.kgconnect.site`)"
+      - "traefik.http.routers.zapexpress-frontend.entrypoints=websecure"
+      - "traefik.http.routers.zapexpress-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.zapexpress-frontend.loadbalancer.server.port=3000"
+    restart: unless-stopped
+
+  # Banco de Dados PostgreSQL
+  zapexpress-db:
+    image: postgres:13
+    container_name: zapexpress-db
+    environment:
+      - POSTGRES_DB=zapexpress
+      - POSTGRES_USER=zapexpress
+      - POSTGRES_PASSWORD=suasenha123
+    volumes:
+      - zapexpress_postgres:/var/lib/postgresql/data
+    networks:
+      - zapexpress
+    restart: unless-stopped
+
+  # Redis
+  zapexpress-redis:
+    image: redis:6-alpine
+    container_name: zapexpress-redis
+    volumes:
+      - zapexpress_redis:/data
+    networks:
+      - zapexpress
+    restart: unless-stopped
+
+  # Adminer (Opcional - para gerenciar banco)
+  zapexpress-adminer:
+    image: adminer:latest
+    container_name: zapexpress-adminer
+    networks:
+      - traefik
+      - zapexpress
+    depends_on:
+      - zapexpress-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.zapexpress-adminer.rule=Host(`db.kgconnect.site`)"
+      - "traefik.http.routers.zapexpress-adminer.entrypoints=websecure"
+      - "traefik.http.routers.zapexpress-adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.zapexpress-adminer.loadbalancer.server.port=8080"
+    restart: unless-stopped
+
+volumes:
+  zapexpress_postgres:
+  zapexpress_redis:
+  zapexpress_public:
+  zapexpress_logs:
